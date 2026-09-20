@@ -1,0 +1,38 @@
+<%- include('partials/head', { title: 'Create an account — Slotline' }) %>
+<%- include('partials/nav', { active: '' }) %>
+<main class="wrap narrow page" style="max-width: 480px;">
+  <h1>Create your booking page</h1>
+  <% if (error) { %><div class="notice"><%= error %></div><% } %>
+  <form method="post" action="/signup" class="card">
+    <div class="field">
+      <label for="name">Your name</label>
+      <input type="text" id="name" name="name" value="<%= values.name %>" required autofocus />
+    </div>
+    <div class="field">
+      <label for="slug">Link name</label>
+      <input type="text" id="slug" name="slug" value="<%= values.slug %>" placeholder="priya" />
+      <p class="hint">Your page will be at /your-link-name</p>
+    </div>
+    <div class="field">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" value="<%= values.email %>" required />
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" minlength="8" required />
+      <p class="hint">At least 8 characters.</p>
+    </div>
+    <div class="field">
+      <label for="timeZone">Your timezone</label>
+      <select id="timeZone" name="timeZone" data-detect-timezone>
+        <% COMMON_TIMEZONES.forEach(function (zone) { %>
+          <option value="<%= zone %>" <%= values.timeZone === zone ? 'selected' : '' %>><%= zone.replace('_', ' ') %></option>
+        <% }) %>
+      </select>
+      <p class="hint">Your weekly hours are written in this zone.</p>
+    </div>
+    <button class="btn btn-primary" type="submit">Create account</button>
+  </form>
+</main>
+<script src="/app.js" type="module"></script>
+</body></html>

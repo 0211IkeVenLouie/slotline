@@ -1,0 +1,163 @@
+<%- include('partials/head', { title: 'Availability — Slotline' }) %>
+<%- include('partials/nav', { active: 'availability' }) %>
+<main class="wrap page">
+  <div class="page-head">
+    <h1>Availability</h1>
+    <span class="spacer"></span>
+    <% if (saved) { %><span class="badge">Saved</span><% } %>
+  </div>
+
+  <div class="grid-2">
+    <form method="post" action="/app/availability" class="card">
+      <h2>Weekly hours</h2>
+      <p class="muted small">
+        Written in your own timezone. A rule saying 09:00 stays at 09:00 through a
+        daylight-saving change — the UTC instant behind it moves instead.
+      </p>
+
+      <div class="field">
+        <label for="timeZone">Your timezone</label>
+        <select id="timeZone" name="timeZone">
+          <% COMMON_TIMEZONES.forEach(function (zone) { %>
+            <option value="<%= zone %>" <%= host.timeZone === zone ? 'selected' : '' %>><%= zone.replace('_', ' ') %></option>
+          <% }) %>
+          <% if (!COMMON_TIMEZONES.includes(host.timeZone)) { %>
+            <option value="<%= host.timeZone %>" selected><%= host.timeZone.replace('_', ' ') %></option>
+          <% } %>
+        </select>
+      </div>
+
+      <% for (var weekday = 0; weekday < 7; weekday++) {
+           var rule = rules.find(function (r) { return r.weekday === weekday; }); %>
+        <div class="day-row <%= rule ? '' : 'off' %>">
+          <label>
+            <input type="checkbox" name="enabled_<%= weekday %>" <%= rule ? 'checked' : '' %> />
+            <%= WEEKDAY_NAMES[weekday] %>
+          </label>
+          <div class="times">
+            <input type="time" name="start_<%= weekday %>"
+                   value="<%= rule ? String(Math.floor(rule.startMinute/60)).padStart(2,'0') + ':' + String(rule.startMinute%60).padStart(2,'0') : '09:00' %>" />
+            <span class="faint">to</span>
+            <input type="time" name="end_<%= weekday %>"
+                   value="<%= rule ? String(Math.floor(rule.endMinute/60)).padStart(2,'0') + ':' + String(rule.endMinute%60).padStart(2,'0') : '17:00' %>" />
+          </div>
+        </div>
+      <% } %>
+
+      <p class="hint">One window per day here. Split days (a lunch break) are supported by the data model and shown correctly on your page.</p>
+      <button class="btn btn-primary" type="submit" style="margin-top: 12px;">Save hours</button>
+    </form>
+
+    <div>
+      <div class="card">
+        <h2>Meeting types</h2>
+        <% if (eventTypes.length === 0) { %>
+          <div class="empty" style="margin: 10px 0;"><strong>No meeting types yet.</strong> Add one below.</div>
+        <% } else { %>
+          <div class="list" style="margin-bottom: 16px;">
+            <% eventTypes.forEach(function (type) { %>
+              <div class="list-item" style="padding: 10px 12px;">
+                <span>
+                  <strong><%= type.title %></strong>
+                  <div class="small faint">
+                    <%= type.durationMinutes %> min · every <%= type.incrementMinutes %> min<% if (type.bufferMinutes) { %> · <%= type.bufferMinutes %> min buffer<% } %>
+                    · <%= type.minNoticeMinutes %> min notice
+                  </div>
+                </span>
+                <span class="spacer"></span>
+                <a class="btn btn-sm" href="/<%= host.slug %>/<%= type.slug %>" target="_blank" rel="noopener">View</a>
+                <form method="post" action="/app/event-types/<%= type.id %>/delete">
+                  <button class="btn btn-sm btn-ghost" type="submit">Delete</button>
+                </form>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+
+        <form method="post" action="/app/event-types">
+          <div class="field">
+            <label for="title">Name</label>
+            <input type="text" id="title" name="title" placeholder="Intro call" required />
+          </div>
+          <div class="field">
+            <label for="description">Description</label>
+            <input type="text" id="description" name="description" placeholder="A short first conversation." />
+          </div>
+          <div class="row">
+            <div class="field" style="flex:1;">
+              <label for="durationMinutes">Length (min)</label>
+              <input type="number" id="durationMinutes" name="durationMinutes" value="30" min="5" max="480" />
+            </div>
+            <div class="field" style="flex:1;">
+              <label for="incrementMinutes">Start every (min)</label>
+              <input type="number" id="incrementMinutes" name="incrementMinutes" value="30" min="5" max="480" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="field" style="flex:1;">
+              <label for="bufferMinutes">Buffer (min)</label>
+              <input type="number" id="bufferMinutes" name="bufferMinutes" value="0" min="0" max="240" />
+            </div>
+            <div class="field" style="flex:1;">
+              <label for="minNoticeMinutes">Notice (min)</label>
+              <input type="number" id="minNoticeMinutes" name="minNoticeMinutes" value="60" min="0" />
+            </div>
+          </div>
+          <button class="btn" type="submit">Add meeting type</button>
+        </form>
+      </div>
+
+      <div class="card" style="margin-top: 20px;">
+        <h2>Days off and one-off hours</h2>
+        <% if (overrides.length === 0) { %>
+          <p class="muted small">Nothing overridden. Your weekly hours apply every week.</p>
+        <% } else { %>
+          <div class="list" style="margin-bottom: 14px;">
+            <% overrides.forEach(function (override) { %>
+              <div class="list-item" style="padding: 8px 12px;">
+                <span class="when" style="min-width: 120px;"><%= override.dateKey %></span>
+                <span class="who">
+                  <% if (override.blocked) { %>Unavailable all day<% } else { %>
+                    <%= String(Math.floor(override.startMinute/60)).padStart(2,'0') %>:<%= String(override.startMinute%60).padStart(2,'0') %>
+                    – <%= String(Math.floor(override.endMinute/60)).padStart(2,'0') %>:<%= String(override.endMinute%60).padStart(2,'0') %>
+                  <% } %>
+                </span>
+                <span class="spacer"></span>
+                <form method="post" action="/app/overrides/<%= override.dateKey %>/delete">
+                  <button class="btn btn-sm btn-ghost" type="submit">Remove</button>
+                </form>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+        <form method="post" action="/app/overrides">
+          <div class="row">
+            <div class="field" style="flex:1;">
+              <label for="dateKey">Date</label>
+              <input type="date" id="dateKey" name="dateKey" required />
+            </div>
+            <div class="field" style="flex:1;">
+              <label for="mode">What happens</label>
+              <select id="mode" name="mode">
+                <option value="blocked">Unavailable all day</option>
+                <option value="hours">Different hours</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field" style="flex:1;">
+              <label for="start">From</label>
+              <input type="time" id="start" name="start" value="10:00" />
+            </div>
+            <div class="field" style="flex:1;">
+              <label for="end">To</label>
+              <input type="time" id="end" name="end" value="14:00" />
+            </div>
+          </div>
+          <button class="btn" type="submit">Add override</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>
+</body></html>

@@ -1,0 +1,37 @@
+<%- include('partials/head', { title: (cancelled ? 'Cancelled' : 'Confirmed') + ' — Slotline' }) %>
+<%- include('partials/nav', { active: '' }) %>
+<main class="wrap narrow page" style="max-width: 560px;">
+  <div class="card">
+    <% if (cancelled) { %>
+      <div class="confirm-icon" style="background:#fdf3f2;color:#8b2c1f;">✕</div>
+      <h1 style="font-size:1.3rem;">This booking is cancelled</h1>
+      <p class="muted">The calendar invite has been withdrawn for both of you.</p>
+    <% } else { %>
+      <div class="confirm-icon">✓</div>
+      <h1 style="font-size:1.3rem;">You are booked in</h1>
+      <p class="muted">A confirmation with a calendar invite is on its way to <%= booking.inviteeEmail %>.</p>
+    <% } %>
+
+    <dl class="kv">
+      <dt>What</dt><dd><%= eventType ? eventType.title : 'Meeting' %> with <%= host.name %></dd>
+      <dt>When</dt><dd><%= formatRange(booking.startsAt, booking.endsAt, viewerTimeZone) %></dd>
+      <dt><%= host.name %>’s time</dt><dd><%= formatRange(booking.startsAt, booking.endsAt, host.timeZone) %></dd>
+      <dt>Who</dt><dd><%= booking.inviteeName %> · <%= booking.inviteeEmail %></dd>
+      <% if (booking.notes) { %><dt>Notes</dt><dd><%= booking.notes %></dd><% } %>
+    </dl>
+
+    <div class="row" style="margin-top: 18px;">
+      <a class="btn" href="/booking/<%= booking.cancelToken %>/calendar.ics">Download invite (.ics)</a>
+      <% if (!cancelled) { %>
+        <form method="post" action="/booking/<%= booking.cancelToken %>/cancel"
+              onsubmit="return confirm('Cancel this booking?');">
+          <button class="btn btn-ghost" type="submit">Cancel booking</button>
+        </form>
+      <% } else if (eventType) { %>
+        <a class="btn btn-primary" href="/<%= host.slug %>/<%= eventType.slug %>">Book another time</a>
+      <% } %>
+    </div>
+  </div>
+  <p class="hint" style="text-align:center;">Keep this link — it is how you manage the booking.</p>
+</main>
+</body></html>

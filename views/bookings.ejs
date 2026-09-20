@@ -1,0 +1,63 @@
+<%- include('partials/head', { title: 'Bookings — Slotline' }) %>
+<%- include('partials/nav', { active: 'bookings' }) %>
+<main class="wrap page">
+  <div class="page-head">
+    <h1>Bookings</h1>
+    <span class="spacer"></span>
+    <span class="small muted">Times shown in <%= host.timeZone.replace('_', ' ') %></span>
+  </div>
+
+  <div class="tabs">
+    <a href="/app" class="<%= past ? '' : 'active' %>">Upcoming</a>
+    <a href="/app?view=past" class="<%= past ? 'active' : '' %>">Past</a>
+  </div>
+
+  <% if (bookings.length === 0) { %>
+    <div class="empty">
+      <strong><%= past ? 'No past bookings yet.' : 'Nothing booked yet.' %></strong>
+      <% if (!past) { %>
+        Share your page and the bookings will show up here.
+        <div style="margin-top: 14px;">
+          <code><%= baseUrl %>/<%= host.slug %></code>
+        </div>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div class="list">
+      <% bookings.forEach(function (booking) { %>
+        <div class="list-item">
+          <span class="when">
+            <%= formatDateShort(booking.startsAt, host.timeZone) %> ·
+            <%= formatTime(booking.startsAt, host.timeZone) %>–<%= formatTime(booking.endsAt, host.timeZone) %>
+          </span>
+          <span>
+            <strong><%= booking.inviteeName %></strong>
+            <span class="who">· <%= booking.eventTitle %></span>
+            <% if (booking.status === 'cancelled') { %><span class="badge badge-quiet">cancelled</span><% } %>
+            <div class="small faint">
+              <%= booking.inviteeEmail %> ·
+              their time: <%= formatTime(booking.startsAt, booking.inviteeTimeZone) %>
+              (<%= booking.inviteeTimeZone.replace('_', ' ') %>)
+            </div>
+            <% if (booking.notes) { %><div class="small muted" style="margin-top:4px;">“<%= booking.notes %>”</div><% } %>
+          </span>
+          <span class="spacer"></span>
+          <a class="btn btn-sm" href="/booking/<%= booking.cancelToken %>">Details</a>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <h2 style="margin-top: 36px;">Your links</h2>
+  <div class="list">
+    <% eventTypes.forEach(function (type) { %>
+      <div class="list-item">
+        <span><strong><%= type.title %></strong> <span class="who">· <%= type.durationMinutes %> min</span></span>
+        <span class="spacer"></span>
+        <code class="small"><%= baseUrl %>/<%= host.slug %>/<%= type.slug %></code>
+        <a class="btn btn-sm" href="/<%= host.slug %>/<%= type.slug %>" target="_blank" rel="noopener">Open ↗</a>
+      </div>
+    <% }) %>
+  </div>
+</main>
+</body></html>

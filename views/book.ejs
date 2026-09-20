@@ -1,0 +1,86 @@
+<%- include('partials/head', { title: eventType.title + ' with ' + host.name }) %>
+<main class="wrap page" style="max-width: 900px;">
+  <div class="card" style="padding: 0; overflow: hidden;">
+    <div class="book-layout">
+      <aside class="book-side">
+        <div class="small muted"><%= host.name %></div>
+        <h1 style="font-size: 1.35rem; margin-top: 4px;"><%= eventType.title %></h1>
+        <p class="duration small">⏱ <%= eventType.durationMinutes %> minutes</p>
+        <% if (eventType.description) { %><p class="muted small"><%= eventType.description %></p><% } %>
+
+        <form method="post" action="/<%= host.slug %>/<%= eventType.slug %>" id="book-form" style="margin-top: 22px;">
+          <input type="hidden" name="startsAt" id="startsAt" value="<%= values.startsAt || '' %>" />
+          <input type="hidden" name="timeZone" value="<%= timeZone %>" />
+          <div id="chosen" class="small muted" style="margin-bottom: 14px;">
+            <%= values.startsAt ? '' : 'Pick a time to continue →' %>
+          </div>
+          <div class="field">
+            <label for="inviteeName">Your name</label>
+            <input type="text" id="inviteeName" name="inviteeName" value="<%= values.inviteeName || '' %>" required />
+          </div>
+          <div class="field">
+            <label for="inviteeEmail">Email</label>
+            <input type="email" id="inviteeEmail" name="inviteeEmail" value="<%= values.inviteeEmail || '' %>" required />
+            <p class="hint">We send a confirmation with a calendar invite.</p>
+          </div>
+          <div class="field">
+            <label for="notes">Anything to add?</label>
+            <textarea id="notes" name="notes" rows="3"><%= values.notes || '' %></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit" id="submit" <%= values.startsAt ? '' : 'disabled' %>>
+            Confirm booking
+          </button>
+        </form>
+      </aside>
+
+      <section class="book-main">
+        <% if (error) { %><div class="notice"><%= error %></div><% } %>
+
+        <div class="tz-bar">
+          <span>Times shown in</span>
+          <select id="tz-select" aria-label="Your timezone">
+            <% var zones = COMMON_TIMEZONES.includes(timeZone) ? COMMON_TIMEZONES : COMMON_TIMEZONES.concat([timeZone]); %>
+            <% zones.forEach(function (zone) { %>
+              <option value="<%= zone %>" <%= zone === timeZone ? 'selected' : '' %>><%= zone.replace('_', ' ') %></option>
+            <% }) %>
+          </select>
+          <span class="faint">(<%= zoneAbbreviation(new Date(), timeZone) %>)</span>
+        </div>
+
+        <div class="row" style="justify-content: space-between; margin-bottom: 14px;">
+          <a class="btn btn-sm" href="?from=<%= prevFrom %>&tz=<%= encodeURIComponent(timeZone) %>"
+             <%= fromDateKey <= todayKey ? 'aria-disabled="true" style="pointer-events:none;opacity:.5"' : '' %>>← Earlier</a>
+          <span class="small muted">Two weeks from <%= fromDateKey %></span>
+          <a class="btn btn-sm" href="?from=<%= nextFrom %>&tz=<%= encodeURIComponent(timeZone) %>">Later →</a>
+        </div>
+
+        <% if (grouped.length === 0) { %>
+          <div class="empty">
+            <strong>No times available in this window.</strong>
+            Try the next two weeks, or check back later.
+          </div>
+        <% } else { %>
+          <% grouped.forEach(function (entry) { var dayKey = entry[0], slots = entry[1]; %>
+            <div class="slot-day">
+              <h3><%= formatDate(slots[0].startsAt, timeZone) %></h3>
+              <div class="slots">
+                <% slots.forEach(function (slot) { %>
+                  <button type="button" class="slot" aria-pressed="false"
+                          data-iso="<%= slot.startsAt.toISOString() %>"
+                          data-label="<%= formatRange(slot.startsAt, slot.endsAt, timeZone) %>">
+                    <%= formatTime(slot.startsAt, timeZone) %>
+                  </button>
+                <% }) %>
+              </div>
+            </div>
+          <% }) %>
+        <% } %>
+      </section>
+    </div>
+  </div>
+  <p class="small faint" style="text-align:center; margin-top: 18px;">
+    <%= host.name %>’s hours are set in <%= host.timeZone.replace('_', ' ') %>. You are seeing them converted to <%= timeZone.replace('_', ' ') %>.
+  </p>
+</main>
+<script src="/app.js" type="module"></script>
+</body></html>

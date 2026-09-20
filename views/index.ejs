@@ -1,0 +1,48 @@
+<%- include('partials/head', { title: 'Slotline — booking pages that get timezones right' }) %>
+<%- include('partials/nav', { active: '' }) %>
+
+<main class="wrap narrow page">
+  <h1>Share your availability. Let people book it.</h1>
+  <p class="muted" style="font-size: 1.05rem;">
+    You set your hours once, in your own timezone. Visitors see them in theirs.
+    Everything is stored as an instant in UTC, so nothing shifts when the clocks do —
+    and two people cannot take the same slot, however close together they click.
+  </p>
+
+  <div style="display:flex; gap:10px; margin:26px 0 8px; flex-wrap:wrap;">
+    <form method="post" action="/demo-login">
+      <button class="btn btn-primary" type="submit">Open the demo account →</button>
+    </form>
+    <% if (demoHost) { %>
+      <a class="btn" href="/<%= demoHost.slug %>">See the public booking page</a>
+    <% } %>
+  </div>
+  <p class="hint">
+    The demo account is already set up: weekly hours, two meeting types and a few bookings.
+    No signup. (It signs you in as <code><%= demoEmail %></code>.)
+  </p>
+
+  <div class="grid-2" style="margin-top: 40px;">
+    <div class="card">
+      <h2>Timezones, properly</h2>
+      <p class="muted small">
+        Availability is written in wall-clock time — "Tuesdays, 09:00" — and converted per
+        day, so it stays at 09:00 after a daylight-saving change instead of drifting to 08:00.
+        Clock times that a DST jump deletes are never offered, because that meeting cannot happen.
+      </p>
+    </div>
+    <div class="card">
+      <h2>No double bookings</h2>
+      <p class="muted small">
+        Not "check then insert", which two simultaneous requests both pass. A Postgres
+        <code>EXCLUDE USING gist</code> constraint makes an overlapping booking impossible to
+        store at all, so the loser of a race gets a clear message instead of a clash.
+      </p>
+    </div>
+  </div>
+
+  <h2 style="margin-top: 40px;">Have an account?</h2>
+  <p><a href="/login">Sign in</a> · <a href="/signup">Create one</a></p>
+</main>
+<footer class="site wrap"><span class="faint">Slotline · Node, Postgres, Resend</span></footer>
+</body></html>

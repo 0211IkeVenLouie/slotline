@@ -1,0 +1,19 @@
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="/"><span class="brand-dot"></span> Slotline</a>
+    <% if (currentHost) { %>
+      <nav class="nav">
+        <a href="/app" class="<%= active === 'bookings' ? 'active' : '' %>">Bookings</a>
+        <a href="/app/availability" class="<%= active === 'availability' ? 'active' : '' %>">Availability</a>
+        <a href="/<%= currentHost.slug %>" target="_blank" rel="noopener">Your page ↗</a>
+      </nav>
+    <% } %>
+    <span class="spacer"></span>
+    <% if (currentHost) { %>
+      <span class="small muted"><%= currentHost.email %></span>
+      <form method="post" action="/logout"><button class="btn btn-sm btn-ghost" type="submit">Sign out</button></form>
+    <% } else { %>
+      <a class="btn btn-sm" href="/login">Sign in</a>
+    <% } %>
+  </div>
+</header>

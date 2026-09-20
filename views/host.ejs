@@ -1,0 +1,23 @@
+<%- include('partials/head', { title: host.name + ' — book a time' }) %>
+<%- include('partials/nav', { active: '' }) %>
+<main class="wrap narrow page">
+  <h1><%= host.name %></h1>
+  <p class="muted">Pick a meeting length to see available times.</p>
+  <% if (eventTypes.length === 0) { %>
+    <div class="empty"><strong><%= host.name %> has not published any meeting types yet.</strong></div>
+  <% } else { %>
+    <div class="list">
+      <% eventTypes.forEach(function (type) { %>
+        <a class="list-item" href="/<%= host.slug %>/<%= type.slug %>" style="color: inherit; text-decoration: none;">
+          <span>
+            <strong><%= type.title %></strong>
+            <div class="small muted"><%= type.durationMinutes %> minutes<% if (type.description) { %> · <%= type.description %><% } %></div>
+          </span>
+          <span class="spacer"></span>
+          <span class="btn btn-sm btn-primary">Book</span>
+        </a>
+      <% }) %>
+    </div>
+  <% } %>
+</main>
+</body></html>

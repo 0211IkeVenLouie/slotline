@@ -1,0 +1,9 @@
+<%- include('partials/head', { title: 'Not found — Slotline' }) %>
+<%- include('partials/nav', { active: '' }) %>
+<main class="wrap narrow page">
+  <div class="empty">
+    <strong><%= typeof message !== 'undefined' ? message : 'That page does not exist.' %></strong>
+    <div style="margin-top: 16px;"><a class="btn" href="/">Back to the start</a></div>
+  </div>
+</main>
+</body></html>

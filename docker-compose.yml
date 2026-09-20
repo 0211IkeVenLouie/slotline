@@ -1,0 +1,30 @@
+# docker compose up  ->  http://localhost:3000 with a seeded demo board.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: slotline
+    ports: ['5432:5432']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 3s
+      retries: 10
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/slotline
+      PORT: '3000'
+      BASE_URL: http://localhost:3000
+      # Leave RESEND_API_KEY unset and confirmation emails are printed to the
+      # container log instead of sent, so the demo works with no credentials.
+      RESEND_API_KEY: ''
+    ports: ['3000:3000']
+    depends_on:
+      db: { condition: service_healthy }
+
+volumes:
+  pgdata:
