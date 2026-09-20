@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Slotline — Availability and booking pages</title>
+<meta name="description" content="Publish your weekly hours once, in your own timezone. Visitors see them in theirs and pick a slot. Confirmations go out with a real calendar invite attached." />
+<meta property="og:title" content="Slotline — Availability and booking pages" />
+<meta property="og:description" content="Publish your weekly hours once, in your own timezone. Visitors see them in theirs and pick a slot. Confirmations go out with a real calendar invite attached." />
+<meta property="og:type" content="website" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='7' fill='%230f766e'/></svg>" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <span class="dot"></span>
+    <span class="name">Slotline</span>
+    <span class="spacer"></span>
+    <a href="https://github.com/0211IkeVenLouie/slotline">Source</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <p class="tagline">Availability and booking pages</p>
+    <h1>Share your availability. Let people book it.</h1>
+    <p class="lede">Publish your weekly hours once, in your own timezone. Visitors see them in theirs and pick a slot. Confirmations go out with a real calendar invite attached.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/0211IkeVenLouie/slotline">Read the code →</a>
+      <a class="btn" href="#run">Run it in one command</a>
+    </div>
+    <div class="meta">
+      <span class="chip">43 tests passing</span>
+      <span class="chip-quiet chip">Node 22 · TypeScript · Express · Postgres 16 · Resend</span>
+    </div>
+  </section>
+
+  <figure>
+    <img src="booking-page.png" alt="A visitor in Tokyo booking time with a host in New York" />
+    <figcaption>A visitor in Tokyo booking time with a host in New York</figcaption>
+  </figure>
+
+  <h2>The hard part</h2>
+  <p class="question">What time is “Tuesday at 09:00”, and who gets the slot when two people click at once?</p>
+  <p>Two problems, and they are the reason this is more interesting than its CRUD surface suggests.</p>
+    <h3>1. Timezones are not an offset</h3>
+  <p>An instant is stored in UTC; a rule is wall-clock time <em>plus an IANA zone</em>. “Tuesdays 09:00–17:00” is not a fixed span of UTC — in New York it is 13:00–21:00Z for half the year and 14:00–22:00Z for the other half. So the conversion happens per day, through the zone, never once with a cached offset.</p>
+  <h3>2. The round-trip check most implementations skip</h3>
+  <p>On 8 March 2026 New York goes straight from 01:59 to 03:00. There is no 02:30. A naive converter quietly returns 01:30 or 03:30 and offers a meeting at a time that never happens. Slotline converts, formats back, compares — and if they disagree, the slot is not offered. Going the other way, 01:30 on 1 November happens twice, and resolves to the first occurrence rather than two bookable slots an hour apart both claiming to be 01:30.</p>
+  <h3>3. Double booking is settled by the database</h3>
+  <p>“Check then insert” is a read-then-write race: two requests milliseconds apart both read free and both insert. No amount of application checking closes it. So the guarantee lives in the schema — Postgres refuses to <em>store</em> the overlap:</p>
+    <pre><code>EXCLUDE USING gist (
+  host_id WITH =,
+  tstzrange(starts_at, ends_at) WITH &amp;&amp;
+) WHERE (status = 'confirmed')</code></pre>
+  <p>It is an <em>overlap</em> check, not equality, so a 60-minute booking blocks the 30-minute slot starting halfway through it. Ranges are half-open, so back-to-back bookings are fine. And scoping it to confirmed rows means cancelling genuinely frees the slot. The test fires ten concurrent bookings at one slot; exactly one survives.</p>
+    <h3>A smaller one: the calendar invite</h3>
+  <p><code>.ics</code> is hand-written — CRLF line endings, folding at 75 <em>octets</em> without splitting a multi-byte character, and a stable UID with an incrementing SEQUENCE so cancelling <strong>removes</strong> the meeting instead of adding a second contradictory one.</p>
+
+  <h2 id="run">Running it</h2>
+  <p>It is a server application — Postgres, sessions, and an exclusion constraint doing the real work. This page is a static showcase; the app itself needs somewhere to run. One command does it:</p>
+  <pre><code>git clone https://github.com/0211IkeVenLouie/slotline
+cd slotline
+docker compose up</code></pre>
+  <p>That brings up Postgres, runs the migrations and seeds a demo with real data in it, so there is something to look at the moment it boots.</p>
+
+  <h2>See it for yourself</h2>
+  <ol class="steps">
+    <li>Open a booking page with your system clock set to Tokyo. A New York host’s 9–5 appears as late-night slots — on a different date.</li>
+    <li>Note the gap where the host’s lunch break is, correctly translated.</li>
+    <li>Submit the same slot from two browsers at once. One books; the other is told someone just took it, with the form still filled in.</li>
+  </ol>
+
+  <h2>Also in this set</h2>
+  <div class="others">
+    <a class="other" href="https://0211ikevenlouie.github.io/pulseboard/"><span><span class="t">Pulseboard</span><br /><span class="d">Real-time retro and kanban boards</span></span></a>
+    <a class="other" href="https://0211ikevenlouie.github.io/evensplit/"><span><span class="t">Evensplit</span><br /><span class="d">Shared expenses, minimal settle-up</span></span></a>
+  </div>
+
+  <div class="callout">
+    <strong>Honest about what this page is.</strong>
+    A static showcase on GitHub Pages. The interesting behaviour described above — the database constraint, the server-side masking, the conflict resolution — happens on a server, and a static page cannot fake it without contradicting every claim on it.
+  </div>
+</main>
+
+<footer class="wrap">
+  <p>Built by Ike Ven Louie Anicete · MIT licensed · <a href="https://github.com/0211IkeVenLouie/slotline">github.com/0211IkeVenLouie/slotline</a></p>
+</footer>
+</body>
+</html>
