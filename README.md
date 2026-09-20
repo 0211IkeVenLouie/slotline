@@ -164,12 +164,13 @@ nothing.
 
 ## Deploying
 
-```bash
-fly launch --no-deploy
-fly postgres create && fly postgres attach <db-name>
-fly secrets set RESEND_API_KEY=... MAIL_FROM="You <bookings@yourdomain>"
-fly deploy
-```
+One click on Render — there is a `render.yaml` that creates the database and
+the web service together. Railway and Fly.io instructions are in
+[DEPLOY.md](DEPLOY.md).
+
+The app boots with nothing but `DATABASE_URL`: migrations run on startup and
+the demo data seeds itself, so a fresh deploy has something to look at
+straight away.
 
 Migrations run on boot. `btree_gist` — needed for the exclusion constraint — is
 created by the first migration and ships with Fly, Railway, Supabase and RDS.
