@@ -1,48 +1,68 @@
 <%- include('partials/head', { title: 'Slotline — booking pages that get timezones right' }) %>
 <%- include('partials/nav', { active: '' }) %>
 
-<main class="wrap narrow page">
-  <h1>Share your availability. Let people book it.</h1>
-  <p class="muted" style="font-size: 1.05rem;">
-    You set your hours once, in your own timezone. Visitors see them in theirs.
-    Everything is stored as an instant in UTC, so nothing shifts when the clocks do —
-    and two people cannot take the same slot, however close together they click.
-  </p>
-
-  <div style="display:flex; gap:10px; margin:26px 0 8px; flex-wrap:wrap;">
-    <form method="post" action="/demo-login">
-      <button class="btn btn-primary" type="submit">Open the demo account →</button>
-    </form>
-    <% if (demoHost) { %>
-      <a class="btn" href="/<%= demoHost.slug %>">See the public booking page</a>
-    <% } %>
-  </div>
-  <p class="hint">
-    The demo account is already set up: weekly hours, two meeting types and a few bookings.
-    No signup. (It signs you in as <code><%= demoEmail %></code>.)
-  </p>
-
-  <div class="grid-2" style="margin-top: 40px;">
-    <div class="card">
-      <h2>Timezones, properly</h2>
-      <p class="muted small">
-        Availability is written in wall-clock time — "Tuesdays, 09:00" — and converted per
-        day, so it stays at 09:00 after a daylight-saving change instead of drifting to 08:00.
-        Clock times that a DST jump deletes are never offered, because that meeting cannot happen.
-      </p>
+<main class="wrap narrow">
+  <section class="hero">
+    <h1>Share your availability. <span class="gradient-text">Let people book it.</span></h1>
+    <p class="lede">
+      You set your hours once, in your own timezone. Visitors see them in theirs.
+      Everything is stored as an instant in UTC, so nothing shifts when the clocks do —
+      and two people cannot take the same slot, however close together they click.
+    </p>
+    <div class="hero-actions">
+      <form method="post" action="/demo-login">
+        <button class="btn btn-primary" type="submit">Open the demo account →</button>
+      </form>
+      <% if (demoHost) { %>
+        <a class="btn" href="/<%= demoHost.slug %>">See the public booking page</a>
+      <% } %>
     </div>
-    <div class="card">
-      <h2>No double bookings</h2>
-      <p class="muted small">
-        Not "check then insert", which two simultaneous requests both pass. A Postgres
-        <code>EXCLUDE USING gist</code> constraint makes an overlapping booking impossible to
-        store at all, so the loser of a race gets a clear message instead of a clash.
-      </p>
+    <div class="chips">
+      <span class="chip">DST-correct slots</span>
+      <span class="chip">Calendar invites</span>
+      <span class="chip">No double bookings</span>
+      <span class="chip">No signup to try</span>
     </div>
-  </div>
+    <p class="hint" style="margin-top: 18px;">
+      The demo account is already set up: weekly hours, two meeting types and a few
+      bookings. It signs you in as <code><%= demoEmail %></code>.
+    </p>
+  </section>
 
-  <h2 style="margin-top: 40px;">Have an account?</h2>
-  <p><a href="/login">Sign in</a> · <a href="/signup">Create one</a></p>
+  <section class="section">
+    <p class="section-label">What is actually hard here</p>
+    <h2>“Tuesday at 09:00” is not a fixed moment.</h2>
+    <div class="split" style="margin-top: 18px;">
+      <div class="feature">
+        <div class="feature-icon">◷</div>
+        <h3>Wall time, not offsets</h3>
+        <p>Availability is converted per day through the host's zone, so 09:00 stays 09:00 after the clocks change instead of drifting an hour.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⊘</div>
+        <h3>Times that do not exist</h3>
+        <p>New York has no 02:30 on 8 March. A round-trip check drops those slots rather than quietly offering a meeting at an hour that never happens.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⇄</div>
+        <h3>Rendered in your zone</h3>
+        <p>A visitor in Tokyo books a New York host and sees a different date — same instant, both correct.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔒</div>
+        <h3>The database says no</h3>
+        <p>An exclusion constraint makes an overlapping booking impossible to store, so the loser of a race gets a clear message instead of a clash.</p>
+      </div>
+    </div>
+    <p class="muted" style="margin-top: 18px;">
+      <a href="https://github.com/0211IkeVenLouie/slotline#the-hard-part">Read the full write-up →</a>
+    </p>
+  </section>
+
+  <section class="section">
+    <h2>Have an account?</h2>
+    <p><a href="/login">Sign in</a> · <a href="/signup">Create one</a></p>
+  </section>
 </main>
 <footer class="site wrap"><span class="faint">Slotline · Node, Postgres, Resend</span></footer>
 </body></html>
