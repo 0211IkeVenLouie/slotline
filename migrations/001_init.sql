@@ -1,7 +1,9 @@
 -- btree_gist lets a GiST exclusion constraint mix an equality column (host_id)
 -- with a range column. It ships with the standard Postgres contrib package and
 -- is available on Fly.io, Railway, Supabase and RDS.
-CREATE EXTENSION IF NOT EXISTS btree_gist;
+-- Pinned to public so it is shared when several apps live in one database,
+-- each in its own schema (public stays on the search path for exactly this).
+CREATE EXTENSION IF NOT EXISTS btree_gist WITH SCHEMA public;
 
 CREATE TABLE IF NOT EXISTS hosts (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
